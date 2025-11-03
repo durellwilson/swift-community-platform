@@ -1,11 +1,6 @@
 import { NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { mockAnalytics } from '@/lib/mock-data'
 
 export async function GET() {
-  try {
-    const analytics = await db.getAnalytics()
-    return NextResponse.json({ analytics })
-  } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch analytics' }, { status: 500 })
-  }
+  return NextResponse.json({ analytics: mockAnalytics })
 }

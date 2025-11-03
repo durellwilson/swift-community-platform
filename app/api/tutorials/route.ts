@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { mockTutorials } from '@/lib/mock-data'
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const topic = searchParams.get('topic')
   
-  try {
-    const tutorials = topic 
-      ? await db.getTutorialsByTopic(topic)
-      : await db.getTutorials(50)
-    return NextResponse.json({ tutorials })
-  } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch tutorials' }, { status: 500 })
-  }
+  const tutorials = topic 
+    ? mockTutorials.filter(t => t.topic === topic)
+    : mockTutorials
+    
+  return NextResponse.json({ tutorials })
 }
