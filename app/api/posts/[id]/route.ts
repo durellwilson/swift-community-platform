@@ -1,14 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { mockPosts } from '@/lib/mock-data'
 
 export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const post = await db.getPost(params.id)
+  const post = mockPosts.find(p => p.id === params.id)
   if (!post) {
     return NextResponse.json({ error: 'Post not found' }, { status: 404 })
   }
+  
+  // Increment views
+  post.views++
+  
   return NextResponse.json({ post })
 }
 
@@ -17,12 +21,14 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   const { action } = await req.json()
+  const post = mockPosts.find(p => p.id === params.id)
+  
+  if (!post) {
+    return NextResponse.json({ error: 'Post not found' }, { status: 404 })
+  }
   
   if (action === 'like') {
-    const post = await db.likePost(params.id)
-    if (!post) {
-      return NextResponse.json({ error: 'Post not found' }, { status: 404 })
-    }
+    post.likes++
     return NextResponse.json({ post })
   }
   

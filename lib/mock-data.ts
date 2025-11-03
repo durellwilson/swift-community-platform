@@ -1,3 +1,35 @@
+export interface Comment {
+  id: string
+  postId: string
+  author: string
+  content: string
+  createdAt: number
+}
+
+export const mockComments: Comment[] = [
+  {
+    id: 'comment:1',
+    postId: 'post:1',
+    author: 'Alex Rivera',
+    content: 'Great tutorial! This helped me understand SwiftUI much better.',
+    createdAt: Date.now() - 3600000
+  },
+  {
+    id: 'comment:2',
+    postId: 'post:1',
+    author: 'Jamie Lee',
+    content: 'Can you add more examples about state management?',
+    createdAt: Date.now() - 7200000
+  },
+  {
+    id: 'comment:3',
+    postId: 'post:2',
+    author: 'Taylor Swift',
+    content: 'SwiftData is amazing! Thanks for sharing.',
+    createdAt: Date.now() - 10800000
+  }
+]
+
 export const mockPosts = [
   {
     id: 'post:1',
@@ -9,7 +41,8 @@ export const mockPosts = [
     tags: ['SwiftUI', 'Beginner'],
     likes: 42,
     views: 156,
-    createdAt: Date.now() - 86400000
+    createdAt: Date.now() - 86400000,
+    commentCount: 2
   },
   {
     id: 'post:2',
@@ -21,7 +54,8 @@ export const mockPosts = [
     tags: ['SwiftData', 'Persistence'],
     likes: 38,
     views: 124,
-    createdAt: Date.now() - 172800000
+    createdAt: Date.now() - 172800000,
+    commentCount: 1
   },
   {
     id: 'post:3',
@@ -33,7 +67,8 @@ export const mockPosts = [
     tags: ['Concurrency', 'Swift6'],
     likes: 67,
     views: 203,
-    createdAt: Date.now() - 259200000
+    createdAt: Date.now() - 259200000,
+    commentCount: 0
   }
 ]
 

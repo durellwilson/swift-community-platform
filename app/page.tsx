@@ -12,6 +12,7 @@ interface Post {
   category: string
   likes: number
   views: number
+  commentCount: number
 }
 
 interface Tutorial {
@@ -33,11 +34,20 @@ interface Analytics {
   topTopics: Record<string, number>
 }
 
+interface Comment {
+  id: string
+  author: string
+  content: string
+  createdAt: number
+}
+
 export default function Home() {
   const [posts, setPosts] = useState<Post[]>([])
   const [tutorials, setTutorials] = useState<Tutorial[]>([])
   const [analytics, setAnalytics] = useState<Analytics | null>(null)
   const [loading, setLoading] = useState(true)
+  const [selectedPost, setSelectedPost] = useState<string | null>(null)
+  const [comments, setComments] = useState<Comment[]>([])
 
   useEffect(() => {
     loadData()
@@ -77,9 +87,34 @@ export default function Home() {
     }
   }
 
+  async function likePost(postId: string) {
+    try {
+      const res = await fetch(`/api/posts/${postId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'like' })
+      })
+      const data = await res.json()
+      setPosts(prev => prev.map(p => p.id === postId ? data.post : p))
+    } catch (error) {
+      console.error('Failed to like:', error)
+    }
+  }
+
+  async function loadComments(postId: string) {
+    try {
+      const res = await fetch(`/api/posts/${postId}/comments`)
+      const data = await res.json()
+      setComments(data.comments)
+      setSelectedPost(postId)
+    } catch (error) {
+      console.error('Failed to load comments:', error)
+    }
+  }
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50">
         <div className="text-2xl">Loading...</div>
       </div>
     )
@@ -101,7 +136,6 @@ export default function Home() {
           </p>
         </motion.div>
 
-        {/* Analytics */}
         {analytics && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -115,7 +149,6 @@ export default function Home() {
           </motion.div>
         )}
 
-        {/* Actions */}
         <div className="mb-8 flex gap-4">
           <button
             onClick={generateTutorial}
@@ -131,7 +164,6 @@ export default function Home() {
           </button>
         </div>
 
-        {/* Tutorials */}
         <section className="mb-12">
           <h2 className="text-3xl font-bold mb-6">📚 Latest Tutorials</h2>
           <div className="grid gap-6">
@@ -141,12 +173,18 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Posts */}
         <section>
           <h2 className="text-3xl font-bold mb-6">💬 Community Posts</h2>
           <div className="grid gap-6">
             {posts.slice(0, 5).map(post => (
-              <PostCard key={post.id} post={post} />
+              <PostCard 
+                key={post.id} 
+                post={post} 
+                onLike={() => likePost(post.id)}
+                onViewComments={() => loadComments(post.id)}
+                showComments={selectedPost === post.id}
+                comments={selectedPost === post.id ? comments : []}
+              />
             ))}
           </div>
         </section>
@@ -209,7 +247,19 @@ function TutorialCard({ tutorial }: { tutorial: Tutorial }) {
   )
 }
 
-function PostCard({ post }: { post: Post }) {
+function PostCard({ 
+  post, 
+  onLike, 
+  onViewComments,
+  showComments,
+  comments 
+}: { 
+  post: Post
+  onLike: () => void
+  onViewComments: () => void
+  showComments: boolean
+  comments: Comment[]
+}) {
   return (
     <motion.div
       initial={{ opacity: 0, x: -20 }}
@@ -226,15 +276,41 @@ function PostCard({ post }: { post: Post }) {
           </div>
         </div>
         <div className="flex gap-4 text-sm text-gray-500">
-          <span>❤️ {post.likes}</span>
+          <button onClick={onLike} className="hover:text-red-500 transition">
+            ❤️ {post.likes}
+          </button>
           <span>👁️ {post.views}</span>
         </div>
       </div>
       <p className="text-gray-600 mb-4">{post.content}</p>
       {post.code && (
-        <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-sm">
+        <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-sm mb-4">
           <code>{post.code}</code>
         </pre>
+      )}
+      <button 
+        onClick={onViewComments}
+        className="text-blue-600 hover:underline text-sm"
+      >
+        💬 {post.commentCount} comments
+      </button>
+      
+      {showComments && (
+        <div className="mt-4 pt-4 border-t">
+          <h4 className="font-semibold mb-3">Comments</h4>
+          {comments.length === 0 ? (
+            <p className="text-gray-500 text-sm">No comments yet</p>
+          ) : (
+            <div className="space-y-3">
+              {comments.map(comment => (
+                <div key={comment.id} className="bg-gray-50 p-3 rounded-lg">
+                  <div className="font-semibold text-sm">{comment.author}</div>
+                  <div className="text-gray-600 text-sm">{comment.content}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       )}
     </motion.div>
   )
